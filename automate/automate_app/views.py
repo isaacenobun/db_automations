@@ -105,3 +105,6 @@ def cpu(request):
     # Return HTTPResponse
     
     pass
+
+def cpu_viz(request):
+    pass
