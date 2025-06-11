@@ -1,24 +1,37 @@
 import os
+import json
 
-from django.shortcuts import render
+import oracledb
+
+from django.shortcuts import render, HttpResponse
 
 # SMTP
 import smtplib, ssl
 from email.message import EmailMessage
 
+from dotenv import load_dotenv
+load_dotenv()
+
+# Check if the Oracle client is installed in thick mode or thin mode
+try:
+    oracledb.init_oracle_client(lib_dir=os.getenv("ORACLE_CLIENT_PATH"))
+    print("Running in thick mode")
+except Exception as e:
+    print("Running in thin mode")
+
 # Send mail 
 def report(agent):
     port = 587
-    smtp_server = "smtp.zeptomail.com"
+    smtp_server = os.environ.get('SMTP_SERVER')
     username=os.environ.get('USERNAME')
     password = os.environ.get('PASSWORD')
     
-    if agent == "asm":
+    if agent[-1] == "asm":
         message = "ASM Report"
         msg = EmailMessage()
         msg['Subject'] = "Test Email"
-        msg['From'] = "noreply@creditreferencenigeria.net"
-        msg['To'] = "noreply@creditreferencenigeria.net"
+        msg['From'] = os.environ.get('FROM')
+        msg['To'] = os.environ.get('TO')
         msg.set_content(message)
         try:
             if port == 465:
@@ -35,16 +48,17 @@ def report(agent):
                 print ("use 465 / 587 as port value")
                 exit()
             print ("successfully sent")
+            return True
         except Exception as e:
             print (e)
             return False
     
-    elif agent == "cpu":
+    elif agent[-1] == "cpu":
         message = "CPU Report"
         msg = EmailMessage()
         msg['Subject'] = "Test Email"
-        msg['From'] = "noreply@creditreferencenigeria.net"
-        msg['To'] = "noreply@creditreferencenigeria.net"
+        msg['From'] = os.environ.get('FROM')
+        msg['To'] = os.environ.get('TO')
         msg.set_content(message)
         try:
             if port == 465:
@@ -61,33 +75,63 @@ def report(agent):
                 print ("use 465 / 587 as port value")
                 exit()
             print ("successfully sent")
+            return True
         except Exception as e:
             print (e)
             return False
-        
-    return True
-
-# Db Connections
-def connections():
-    pass
+    
+    return
 
 # Collect ASM data
 def asm(request):
     
-    # Start connection to Db's
+    names, percentages, statuses, db_check = [], [], [], []
     
-    # Start cursor and send query
+    connections_str = os.getenv('CONNECTIONS')
+    connections = json.loads(connections_str)
     
-    # Collect data
+    for connection in connections:
+        db_name = connection[3]
+        names.append(db_name)
+        
+        try:
+            conn = oracledb.connect(
+                user=connection[0],
+                password=connection[1],
+                dsn=connection[2]
+            )
+            print (f"Successfully connected to {db_name}")
+
+            cursor = conn.cursor()
+            cursor.execute('Select round((free_mb/total_mb*100),2) PERCENTAGE from v$asm_diskgroup')
+            data = cursor.fetchall()
+            
+            percentage = str(data[1][0] if db_name == 'Publisher' else data[0][0])
+            percentages.append(percentage)
+
+            if float(percentage) >= 30:
+                statuses.append('OK')
+            else:
+                statuses.append('Check Now')
+                db_check.append(db_name)
+
+            cursor.close()
+            conn.close()
+            print (f"Disconnected from {db_name}")
+        
+        except Exception as e:
+            print (f"Error connecting to {db_name}: {str(e)}")
+            percentages.append('N/A')
+            statuses.append('N/A')
+
+    agent = names + percentages + statuses + db_check + ['asm']
+
+    if report(agent):
+        print ("Successfully sent ASM report!")
+    else:
+        print ("Failed to send ASM report.")
     
-    # End connection
-    
-    # Send to mail function
-    report(agent = "asm")
-    
-    # Return HTTPResponse
-    
-    pass
+    return HttpResponse('<p>Success</p>')
 
 def cpu(request):
     
