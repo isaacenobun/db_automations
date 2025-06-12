@@ -1,139 +1,123 @@
-<tbody>
-  <tr>
-    {% if db_check %}
-    <td
-      style="
+<table
+  style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;color:#222">
+
+  <tbody>
+    <tr>
+      {% if db_check %}
+      <td style="
         font-size: 1.1rem;
         margin-bottom: 18px;
         color: #374151;
         padding: 18px 10px;
         background: #fff;
-      "
-      colspan="7"
-    >
-      <strong>Action Required:</strong> Free up <b>ARCHIVE_LOG03</b> disk space
-      on the following databases: {% for db in db_check %}
-      <span style="color: #b91c1c">{{db}}</span>
+      " colspan="7">
+        <strong>Action Required:</strong> Free up <b>ARCHIVE_LOG03</b> disk space
+        on the following databases: {% for db in db_check %}
+        <span style="color: #b91c1c">{{db}}</span>
+        {% endfor %}
+      </td>
+
+      {% else %}
+      <td style="
+        font-size: 1.1rem;
+        margin-bottom: 18px;
+        color: #374151;
+        padding: 18px 10px;
+        background: #fff;
+      " colspan="7">
+        <strong>No Action Required</strong>
+      </td>
+
+      {% endif %}
+    </tr>
+    <tr>
+      <th style="
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 14px 10px;
+        text-align: center;
+      "></th>
+
+      {% for name in names %}
+
+      <th style="
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 14px 10px;
+        text-align: center;
+      ">
+        {{name}}
+      </th>
+
       {% endfor %}
-    </td>
-
-    {% else %}
-    <td
-      style="
-        font-size: 1.1rem;
-        margin-bottom: 18px;
-        color: #374151;
-        padding: 18px 10px;
-        background: #fff;
-      "
-      colspan="7"
-    >
-      <strong>No Action Required</strong>
-    </td>
-
-    {% endif %}
-  </tr>
-  <tr>
-    <th
-      style="
-        background: #f1f5f9;
-        color: #334155;
-        font-weight: 600;
-        font-size: 1rem;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 14px 10px;
-        text-align: center;
-      "
-    ></th>
-
-    {% for name in names %}
-
-    <th
-      style="
-        background: #f1f5f9;
-        color: #334155;
-        font-weight: 600;
-        font-size: 1rem;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 14px 10px;
-        text-align: center;
-      "
-    >
-      {{name}}
-    </th>
-
-    {% endfor %}
-  </tr>
-  <tr>
-    <td
-      style="
+    </tr>
+    <tr>
+      <td style="
         background: #f9fafb;
         font-weight: 500;
         color: #64748b;
         padding: 14px 10px;
         text-align: center;
         border-bottom: 1px solid #e2e8f0;
-      "
-    >
-      <b>Available<br />Space<br />%</b>
-    </td>
+      ">
+        <b>Available<br />Space<br />%</b>
+      </td>
 
-    {% for percentage in percentages %}
-    <td
-      style="
+      {% for percentage in percentages %}
+      <td style="
         padding: 14px 10px;
         text-align: center;
         border-bottom: 1px solid #e2e8f0;
-      "
-    >
-      {{percentage}}
-    </td>
+      ">
+        {{percentage}}
+      </td>
 
-    {% endfor %}
-  </tr>
-  <tr>
-    <td
-      style="
+      {% endfor %}
+    </tr>
+    <tr>
+      <td style="
         background: #f9fafb;
         font-weight: 500;
         color: #64748b;
         padding: 14px 10px;
         text-align: center;
-      "
-    >
-      <b>Action</b>
-    </td>
+      ">
+        <b>Action</b>
+      </td>
 
-    {% for status in statuses %} {% if status=='OK' %}
+      {% for status in statuses %} {% if status == 'OK' %}
 
-    <td
-      style="
+      <td style="
         background: #e7f9ed;
         color: #15803d;
         font-weight: 500;
         border-radius: 6px;
         padding: 14px 10px;
         text-align: center;
-      "
-    >
-      OK
-    </td>
+      ">
+        OK
+      </td>
 
-    {% else %}
+      {% else %}
 
-    <td
-      style="
+      <td style="
         background: #fef2f2;
         color: #b91c1c;
         font-weight: 500;
         border-radius: 6px;
         padding: 14px 10px;
         text-align: center;
-      "
-    >
-      Check Now
-    </td>
+      ">
+        Check Now
+      </td>
 
-    {% endif %} {% endfor %}
-  </tr>
-</tbody>
+      {% endif %} {% endfor %}
+    </tr>
+  </tbody>
+</table>

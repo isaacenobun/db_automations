@@ -24,11 +24,13 @@ class Command(BaseCommand):
         
         if agent[-1] == "asm":
             
+            agent.remove('asm')
+            
             context = {
-            'names': agent[:5],
-            'percentages': agent[5:10],
-            'statuses': agent[10:15],
-            'db_check': agent[15:20]
+            'names': agent[:6],
+            'percentages': agent[6:12],
+            'statuses': agent[12:18],
+            'db_check': agent[18:]
             }
             
             html_content = render_to_string('send_mail.html', context)
