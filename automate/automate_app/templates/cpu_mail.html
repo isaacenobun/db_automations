@@ -11,8 +11,7 @@
         padding: 18px 10px;
         background: #fff;
       " colspan="7">
-        <strong>Action Required:</strong> Free up <b>ARCHIVE_LOG03</b> disk space
-        on the following databases: {% for db in db_check %}
+        <strong>Action Required:</strong> CPU is spiking in the following databases: {% for db in db_check %}
         <span style="color: #b91c1c">{{db}}</span>
         {% endfor %}
       </td>
@@ -66,16 +65,16 @@
         text-align: center;
         border-bottom: 1px solid #e2e8f0;
       ">
-        <b>Available<br />Space<br />%</b>
+        <b>CPU<br />Load<br />%</b>
       </td>
 
-      {% for percentage in percentages %}
+      {% for load in cpu %}
       <td style="
         padding: 14px 10px;
         text-align: center;
         border-bottom: 1px solid #e2e8f0;
       ">
-        {{percentage}}
+        {{load}}%
       </td>
 
       {% endfor %}
@@ -91,7 +90,7 @@
         <b>Action</b>
       </td>
 
-      {% for status in statuses %} {% if status == 'OK' %}
+      {% for status in statuses %} {% if status == 'Normal Load' %}
 
       <td style="
         background: #e7f9ed;
@@ -114,7 +113,7 @@
         padding: 14px 10px;
         text-align: center;
       ">
-        Check Now
+        CPU Spiking
       </td>
 
       {% endif %} {% endfor %}

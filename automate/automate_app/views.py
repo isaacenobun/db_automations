@@ -133,22 +133,56 @@ def asm(request):
     
     return HttpResponse('<p>Success</p>')
 
+# Collect CPU data
 def cpu(request):
     
-    #  Start connection to Db's
+    names, cpu, statuses, db_check = [], [], [], []
     
-    # Start cursor and send query
+    connections_str = os.getenv('CONNECTIONS')
+    connections = json.loads(connections_str)
     
-    # Collect data
+    for connection in connections:
+        db_name = connection[3]
+        names.append(db_name)
+        
+        try:
+            conn = oracledb.connect(
+                user=connection[0],
+                password=connection[1],
+                dsn=connection[2]
+            )
+            print (f"Successfully connected to {db_name}")
+            
+            cursor = conn.cursor()
+            cursor.execute("SELECT ROUND(value,2) AS host_cpu_utilization_pct FROM v$sysmetric WHERE metric_name = 'Host CPU Utilization (%)'")
+            data = cursor.fetchall()
+            
+            load = str(data[0][0])
+            cpu.append(load)
+
+            if float(cpu) <= 40:
+                statuses.append('Normal Load')
+            else:
+                statuses.append('CPU Spiking')
+                db_check.append(db_name)
+
+            cursor.close()
+            conn.close()
+            print (f"Disconnected from {db_name}")
     
-    # End connection
+        except Exception as e:
+            print (f"Error connecting to {db_name}: {str(e)}")
+            cpu.append('N/A')
+            statuses.append('N/A')
+            
+    agent = names + cpu + statuses + db_check + ['cpu']
     
-    # Send to mail function
-    print() if report(agent="cpu") else print()
-    
-    # Return HTTPResponse
-    
-    pass
+    if report(agent):
+        print ("Successfully sent CPU report!")
+    else:
+        print ("Failed to send CPU report.")
+        
+    return HttpResponse('<p>Success</p>')
 
 def cpu_viz(request):
     pass

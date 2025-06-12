@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Command(BaseCommand):
-    help = 'Checks Oracle ASM disk groups and sends an email report'
+    help = 'Checks CPU Utilization and sends an email report'
 
     def send_report(agent):
         port = 587
@@ -29,10 +29,10 @@ class Command(BaseCommand):
         'db_check': agent[18:]
         }
         
-        html_content = render_to_string('asm_mail.html', context)
+        html_content = render_to_string('cpu_mail.html', context)
         
         msg = EmailMessage()
-        msg['Subject'] = "ASM Monitor"
+        msg['Subject'] = "CPU Load Monitor"
         msg['From'] = os.environ.get('FROM')
         msg['To'] = os.environ.get('TO')
         msg.set_content(html_content, subtype='html')
@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            self.stdout.write("Starting ASM disk group check...")
+            self.stdout.write("Starting CPU Utilization check...")
 
             # Try running in thick mode
             try:
@@ -67,7 +67,7 @@ class Command(BaseCommand):
             except Exception as e:
                 self.stdout.write("Running in thin mode")
 
-            names, percentages, statuses, db_check = [], [], [], []
+            names, cpu, statuses, db_check = [], [], [], []
     
             connections_str = os.getenv('CONNECTIONS')
             connections = json.loads(connections_str)
@@ -85,16 +85,16 @@ class Command(BaseCommand):
                     self.stdout.write(f"Successfully connected to {db_name}")
 
                     cursor = conn.cursor()
-                    cursor.execute('Select round((free_mb/total_mb*100),2) PERCENTAGE from v$asm_diskgroup')
+                    cursor.execute("SELECT ROUND(value,2) AS host_cpu_utilization_pct FROM v$sysmetric WHERE metric_name = 'Host CPU Utilization (%)'")
                     data = cursor.fetchall()
                     
-                    percentage = str(data[1][0] if db_name == 'Publisher' else data[0][0])
-                    percentages.append(percentage)
+                    load = str(data[0][0])
+                    cpu.append(load)
 
-                    if float(percentage) >= 30:
-                        statuses.append('OK')
+                    if float(cpu) <= 40:
+                        statuses.append('Normal Load')
                     else:
-                        statuses.append('Check Now')
+                        statuses.append('CPU Spiking')
                         db_check.append(db_name)
 
                     cursor.close()
@@ -103,15 +103,15 @@ class Command(BaseCommand):
                 
                 except Exception as e:
                     self.stderr.write(self.style.ERROR(f"Error connecting to {db_name}: {str(e)}"))
-                    percentages.append('N/A')
+                    cpu.append('N/A')
                     statuses.append('N/A')
                     
-            agent = names + percentages + statuses + db_check
+            agent = names + cpu + statuses + db_check
 
             if (self.send_report(agent)):
-                self.stdout.write(self.style.SUCCESS("Successfully sent ASM report!"))
+                self.stdout.write(self.style.SUCCESS("Successfully sent CPU Load report!"))
             else:
-                self.stderr.write(self.style.ERROR("Failed to send ASM report."))
+                self.stderr.write(self.style.ERROR("Failed to send CPU Load report."))
 
         except Exception as e:
             self.stderr.write(self.style.ERROR(f"Critical Error: {str(e)}"))
