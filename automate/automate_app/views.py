@@ -9,6 +9,9 @@ from django.shortcuts import render, HttpResponse
 import smtplib, ssl
 from email.message import EmailMessage
 
+import pandas as pd
+from datetime import datetime
+
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -184,5 +187,70 @@ def cpu(request):
         
     return HttpResponse('<p>Success</p>')
 
-def cpu_viz(request):
+# Log CPU load data
+def cpu_logger(request):
+    
+    names, cpu = [], []
+    
+    connections_str = os.getenv('CONNECTIONS')
+    connections = json.loads(connections_str)
+    
+    for connection in connections:
+        db_name = connection[3]
+        names.append(db_name)
+        
+        try:
+            conn = oracledb.connect(
+                user=connection[0],
+                password=connection[1],
+                dsn=connection[2]
+            )
+            print (f"Successfully connected to {db_name}")
+            
+            cursor = conn.cursor()
+            cursor.execute("SELECT ROUND(value,2) AS host_cpu_utilization_pct FROM v$sysmetric WHERE metric_name = 'Host CPU Utilization (%)'")
+            data = cursor.fetchall()
+            
+            load = str(data[0][0])
+            cpu.append(load)
+            
+            cursor.close()
+            conn.close()
+            print (f"Disconnected from {db_name}")
+    
+        except Exception as e:
+            print (f"Error: {str(e)}")
+            cpu.append('0')
+    
+    day = datetime.now().strftime('%d_%m_%y')
+    file_path = f"/cpu_log_{day}.txt"
+    
+    try:
+        with open(file_path, 'w') as f:
+            f.read()
+    except Exception as e:
+        with open(file_path, 'w') as f:
+            f.write(f"Time|{'|'.join(names)}\n")
+            
+    try:
+        new_entry = dict(zip(names, cpu))
+        new_entry['Time'] = datetime.now().strftime('%I:%M%p')
+        
+        print("New data:", new_entry)
+                
+        new_row = pd.DataFrame([new_entry])
+        df = pd.concat([df, new_row], ignore_index=True)
+        
+        df = df[['Time'] + names]
+        
+        df.to_csv(file_path, sep='|', index=False)
+        print(f"Data appended to {file_path}")
+    
+    except Exception as e:
+        print(f"Error: {e}")
+        
+    return HttpResponse('<p>Success</p>')
+
+# Visualize CPU load data
+def cpu_viz():
     pass
