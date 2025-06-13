@@ -65,10 +65,7 @@ class Command(BaseCommand):
             day = datetime.now().strftime('%d_%m_%y')
             file_path = f"/cpu_log_{day}.txt"
             
-            try:
-                with open(file_path, 'w') as f:
-                    f.read()
-            except Exception as e:
+            if not os.path.exists(file_path):
                 with open(file_path, 'w') as f:
                     f.write(f"Time|{'|'.join(names)}\n")
                     

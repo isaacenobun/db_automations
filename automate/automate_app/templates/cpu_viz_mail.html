@@ -1,0 +1,122 @@
+<table
+  style="width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;color:#222">
+
+  <tbody>
+    <tr>
+      {% if db_check %}
+      <td style="
+        font-size: 1.1rem;
+        margin-bottom: 18px;
+        color: #374151;
+        padding: 18px 10px;
+        background: #fff;
+      " colspan="7">
+        <strong>Action Required:</strong> CPU is spiking in the following databases: {% for db in db_check %}
+        <span style="color: #b91c1c">{{db}}</span>
+        {% endfor %}
+      </td>
+
+      {% else %}
+      <td style="
+        font-size: 1.1rem;
+        margin-bottom: 18px;
+        color: #374151;
+        padding: 18px 10px;
+        background: #fff;
+      " colspan="7">
+        <strong>No Action Required</strong>
+      </td>
+
+      {% endif %}
+    </tr>
+    <tr>
+      <th style="
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 14px 10px;
+        text-align: center;
+      "></th>
+
+      {% for name in names %}
+
+      <th style="
+        background: #f1f5f9;
+        color: #334155;
+        font-weight: 600;
+        font-size: 1rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 14px 10px;
+        text-align: center;
+      ">
+        {{name}}
+      </th>
+
+      {% endfor %}
+    </tr>
+    <tr>
+      <td style="
+        background: #f9fafb;
+        font-weight: 500;
+        color: #64748b;
+        padding: 14px 10px;
+        text-align: center;
+        border-bottom: 1px solid #e2e8f0;
+      ">
+        <b>CPU<br />Load<br />%</b>
+      </td>
+
+      {% for load in cpu %}
+      <td style="
+        padding: 14px 10px;
+        text-align: center;
+        border-bottom: 1px solid #e2e8f0;
+      ">
+        {{load}}%
+      </td>
+
+      {% endfor %}
+    </tr>
+    <tr>
+      <td style="
+        background: #f9fafb;
+        font-weight: 500;
+        color: #64748b;
+        padding: 14px 10px;
+        text-align: center;
+      ">
+        <b>Action</b>
+      </td>
+
+      {% for status in statuses %} {% if status == 'Normal Load' %}
+
+      <td style="
+        background: #e7f9ed;
+        color: #15803d;
+        font-weight: 500;
+        border-radius: 6px;
+        padding: 14px 10px;
+        text-align: center;
+      ">
+        Normal Load
+      </td>
+
+      {% else %}
+
+      <td style="
+        background: #fef2f2;
+        color: #b91c1c;
+        font-weight: 500;
+        border-radius: 6px;
+        padding: 14px 10px;
+        text-align: center;
+      ">
+        CPU Spiking
+      </td>
+
+      {% endif %} {% endfor %}
+    </tr>
+  </tbody>
+</table>
