@@ -77,6 +77,11 @@ class Command(BaseCommand):
                 new_entry['Time'] = datetime.now().strftime('%I:%M%p')
                 
                 print("New data:", new_entry)
+                
+                try:
+                    df = pd.read_csv(file_path, sep='|')
+                except (pd.errors.EmptyDataError, FileNotFoundError):
+                    df = pd.DataFrame(columns=['Time'] + names)
                         
                 new_row = pd.DataFrame([new_entry])
                 df = pd.concat([df, new_row], ignore_index=True)
