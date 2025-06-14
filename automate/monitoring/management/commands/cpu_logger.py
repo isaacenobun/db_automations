@@ -71,7 +71,7 @@ class Command(BaseCommand):
                     
             try:
                 new_entry = dict(zip(names, cpu))
-                new_entry['Time'] = datetime.now().strftime('%I:%M%p')
+                new_entry['Time'] = datetime.now().strftime('%H:%M')
                 
                 print("New data:", new_entry)
                 

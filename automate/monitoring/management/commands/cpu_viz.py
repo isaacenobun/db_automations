@@ -24,7 +24,7 @@ load_dotenv()
 class Command(BaseCommand):
     help = 'Plots CPU utilization data from Oracle databases and sends an email report'
 
-    def send_report(self):
+    def send_report(self, agent):
         port = 587
         smtp_server = os.environ.get('SMTP_SERVER')
         username=os.environ.get('USERNAME')
@@ -33,6 +33,15 @@ class Command(BaseCommand):
         image_cid = make_msgid(domain='crccreditbureau.com')[1:-1]
         
         context = {
+            'peak_load': agent['peak_load'],
+            'peak_db': agent['peak_db'],
+            'peak_time': agent['peak_time'],
+            'most_loaded_db': agent['most_loaded_db'],
+            'most_loaded_db_load': agent['most_loaded_db_load'],
+            'least_loaded_db': agent['least_loaded_db'],
+            'least_loaded_db_load': agent['least_loaded_db_load'],
+            'load_std': agent['load_std'],
+            'stability': agent['stability'],
             'image_cid': image_cid
         }
         
@@ -43,8 +52,10 @@ class Command(BaseCommand):
         msg['From'] = os.environ.get('FROM')
         msg['To'] = os.environ.get('TO')
         
-        msg.set_content(html_content, subtype='html')
+        msg.set_content("CPU Utilization Report")
+        msg.add_alternative(html_content, subtype='html')
         
+        html_part = msg.get_body('html')
         day = datetime.now().strftime('%d_%m_%y')
         image_path = f'/cpu_viz_{day}.png'
         
@@ -53,10 +64,10 @@ class Command(BaseCommand):
             return False
         
         with open(image_path, 'rb') as img:
-            msg.get_payload()[1].add_related(
+            html_part.add_related(
                 img.read(),
                 maintype='image',
-                subtype='png',
+                subtype='jpeg',
                 cid=f"<{image_cid}>"
             )
         
@@ -135,8 +146,35 @@ class Command(BaseCommand):
             
             plt.tight_layout()
             plt.savefig(f'/cpu_viz_{day}.png', dpi=1000)
+            
+            df_numeric = df.drop(columns=['Time']).astype(float)
 
-            if (self.send_report()):
+            peak_load = round(df_numeric.max().max(),2)
+            peak_db = df_numeric.max().idxmax()
+            peak_time = df.loc[df[peak_db] == peak_load, 'Time'].values[0]
+
+            avg_load = df_numeric.mean()
+            most_loaded_db = avg_load.idxmax()
+            least_loaded_db = avg_load.idxmin()
+            most_loaded_db_load = round(avg_load.max(),2)
+            least_loaded_db_load = round(avg_load.min(),2)
+
+            load_std = df_numeric.std().mean()
+            stability = "stable" if load_std < 1.5 else "fluctuating"
+            
+            agent = {
+                'peak_load': peak_load,
+                'peak_db': peak_db,
+                'peak_time': peak_time,
+                'most_loaded_db': most_loaded_db,
+                'most_loaded_db_load': most_loaded_db_load,
+                'least_loaded_db': least_loaded_db,
+                'least_loaded_db_load': least_loaded_db_load,
+                'load_std': load_std,
+                'stability': stability
+            }
+
+            if (self.send_report(agent)):
                 self.stdout.write(self.style.SUCCESS("Successfully sent CPU Utilization report!"))
             else:
                 self.stderr.write(self.style.ERROR("Failed to send CPU Utilization report."))
