@@ -40,6 +40,12 @@ class Command(BaseCommand):
             'most_loaded_db_load': agent['most_loaded_db_load'],
             'least_loaded_db': agent['least_loaded_db'],
             'least_loaded_db_load': agent['least_loaded_db_load'],
+            'sub01_prod_load': agent['sub01_prod_load'],
+            'sub02_prod_load': agent['sub02_prod_load'],
+            'primary_load': agent['primary_load'],
+            'publisher_load': agent['publisher_load'],
+            'sub03_prod_load': agent['sub03_prod_load'],
+            'sub04_prod_load': agent['sub04_prod_load'],
             'load_std': agent['load_std'],
             'stability': agent['stability'],
             'image_cid': image_cid
@@ -158,6 +164,13 @@ class Command(BaseCommand):
             least_loaded_db = avg_load.idxmin()
             most_loaded_db_load = round(avg_load.max(),2)
             least_loaded_db_load = round(avg_load.min(),2)
+            avg_loads = avg_load.to_dict()
+            sub01_prod_load = avg_loads.get('Sub01_prod', 0)
+            sub02_prod_load = avg_loads.get('Sub02_prod', 0)
+            primary_load = avg_loads.get('Primary', 0)
+            publisher_load = avg_loads.get('Publisher', 0)
+            sub03_prod_load = avg_loads.get('Sub03_prod', 0)
+            sub04_prod_load = avg_loads.get('Sub04_prod', 0)
 
             load_std = df_numeric.std().mean()
             stability = "stable" if load_std < 1.5 else "fluctuating"
@@ -170,6 +183,12 @@ class Command(BaseCommand):
                 'most_loaded_db_load': most_loaded_db_load,
                 'least_loaded_db': least_loaded_db,
                 'least_loaded_db_load': least_loaded_db_load,
+                'sub01_prod_load': sub01_prod_load,
+                'sub02_prod_load': sub02_prod_load,
+                'primary_load': primary_load,
+                'publisher_load': publisher_load,
+                'sub03_prod_load': sub03_prod_load,
+                'sub04_prod_load': sub04_prod_load,
                 'load_std': load_std,
                 'stability': stability
             }
