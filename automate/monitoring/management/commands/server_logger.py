@@ -25,16 +25,18 @@ class Command(BaseCommand):
         password = os.environ.get('PASSWORD')
         
         context = {
-        'names': agent[:6],
-        'percentages': agent[6:12],
-        'statuses': agent[12:18],
-        'db_check': agent[18:]
+            'host_names': agent[:5],
+            'ip_addresses': agent[5:10],
+            'cpu': agent[10:15],
+            'ram': agent[15:20],
+            'hourly_usage': agent[20:25],
+            'total_usage': agent[25:30]
         }
         
-        html_content = render_to_string('asm_mail.html', context)
+        html_content = render_to_string('server_mail.html', context)
         
         msg = EmailMessage()
-        msg['Subject'] = "ASM Monitor"
+        msg['Subject'] = "Server Hourly Report"
         msg['From'] = os.environ.get('FROM')
         msg['To'] = os.environ.get('TO')
         msg.set_content(html_content, subtype='html')
@@ -135,6 +137,13 @@ class Command(BaseCommand):
                     
                     except Exception as e:
                         print(f"Error connecting to {host_name}: {str(e)}")
+                        
+                agent =  host_names + cpu + ram + hourly_usage + total_usage
+
+                if (self.send_report(agent)):
+                    self.stdout.write(self.style.SUCCESS("Successfully sent Server Statistics report!"))
+                else:
+                    self.stderr.write(self.style.ERROR("Failed to send Server Statistics report."))
             
             except Exception as e:
                 self.stderr.write(self.style.ERROR(f"Critical Error: {str(e)}"))
